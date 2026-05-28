@@ -1,4 +1,4 @@
-FROM ollama/ollama:0.17.6
+FROM ollama/ollama:0.24.0
 RUN apt-get update && \
     apt-get install -y curl && \
     rm -rf /var/lib/apt/lists/*
