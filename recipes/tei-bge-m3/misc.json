@@ -1,0 +1,8 @@
+{
+  "ui": {},
+  "documentation_url": "https://docs.salad.com/container-engine/reference/recipes/tei-bge-m3",
+  "short_description": "Serve BAAI/bge-m3 embeddings with Hugging Face Text Embeddings Inference for RAG, semantic search, document retrieval, and similarity search.",
+  "workload_types": [
+    "LLM"
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "container_template": {
+    "autostartPolicy": true,
+    "container": {
+      "environmentVariables": {
+        "HOSTNAME": "::",
+        "PORT": "3000",
+        "MODEL_ID": "BAAI/bge-m3",
+        "DTYPE": "float16",
+        "MAX_BATCH_TOKENS": "16384",
+        "MAX_CLIENT_BATCH_SIZE": "32"
+      },
+      "image": "ghcr.io/huggingface/text-embeddings-inference:89-1.9",
+      "imageCaching": true,
+      "priority": "high",
+      "resources": {
+        "cpu": 4,
+        "gpuClasses": ["ed563892-aacd-40f5-80b7-90c9be6c759b"],
+        "memory": 30720,
+        "storageAmount": 53687091200
+      }
+    },
+    "name": "",
+    "networking": {
+      "auth": true,
+      "clientRequestTimeout": 100000,
+      "loadBalancer": "least_number_of_connections",
+      "port": 3000,
+      "protocol": "http",
+      "serverResponseTimeout": 100000,
+      "singleConnectionLimit": false
+    },
+    "replicas": 1,
+    "restartPolicy": "always",
+    "readme": "# 🤗 TEI BGE-M3 Embeddings\n\nServe `BAAI/bge-m3` with Hugging Face Text Embeddings Inference for RAG, semantic search, document retrieval, and similarity search.\n\n## Model\n\n- **Model ID**: `BAAI/bge-m3`\n- **Embedding size**: 1024 dimensions\n- **Maximum sequence length**: 8192 tokens\n- **Strengths**: multilingual retrieval, long document retrieval, dense semantic embeddings, and similarity search\n\nBGE-M3 is designed around multi-linguality, multi-functionality, and multi-granularity. In practice, this recipe gives you the dense embedding endpoint that most vector databases and RAG frameworks use.\n\n## Access\n\n- <Link url={`https://${props.networking.dns}/health`}>Health Check</Link>\n- <Link url={`https://${props.networking.dns}/info`}>Model Info</Link>\n- <Link url={`https://${props.networking.dns}/docs`}>Swagger Docs</Link> (Needs auth if enabled)\n\n## Deployment Notes\n\n- Startup can take several minutes because `BAAI/bge-m3` is downloaded from Hugging Face at container startup.\n- The container image is `ghcr.io/huggingface/text-embeddings-inference:89-1.9`.\n- The TEI command is equivalent to `text-embeddings-router --model-id BAAI/bge-m3 --port 3000`.\n- The container listens on port `3000` and exposes TEI's `/embed`, `/v1/embeddings`, `/similarity`, `/info`, `/health`, and `/docs` HTTP routes.\n- The model's long context is useful for document retrieval, but very long batches use more VRAM. Tune `MAX_BATCH_TOKENS` and `MAX_CLIENT_BATCH_SIZE` in Advanced Configuration after load testing.\n\n<Callout variation=\"note\">Omit the `Salad-Api-Key` header if auth is disabled.</Callout>\n\n## Curl Example\n\n<CodeBlock language=\"bash\">{`curl https://${props.networking.dns}/embed \\\\\n  -X POST \\\\\n  -H 'Content-Type: application/json' \\\\\n  -H 'Salad-Api-Key: ${props.apiKey}' \\\\\n  -d '{\\n    \"inputs\": [\\n      \"BGE-M3 is useful for multilingual semantic search.\",\\n      \"Text embeddings help retrieve documents for RAG applications.\"\\n    ],\\n    \"normalize\": true\\n  }'\n`}</CodeBlock>\n\n## OpenAI-Compatible Example\n\n<CodeBlock language=\"bash\">{`curl https://${props.networking.dns}/v1/embeddings \\\\\n  -X POST \\\\\n  -H 'Content-Type: application/json' \\\\\n  -H 'Salad-Api-Key: ${props.apiKey}' \\\\\n  -d '{\\n    \"model\": \"${props.container.environmentVariables.MODEL_ID}\",\\n    \"input\": [\\n      \"What is BGE-M3 good for?\",\\n      \"Use embeddings for document retrieval and similarity search.\"\\n    ],\\n    \"encoding_format\": \"float\"\\n  }'\n`}</CodeBlock>\n\n## Resources\n\n- [Hugging Face Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)\n- [BAAI/bge-m3 model card](https://huggingface.co/BAAI/bge-m3)\n- [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding)\n- [Recipe Source](https://github.com/SaladTechnologies/salad-recipes/tree/master/recipes/tei-bge-m3)\n- <Link url={`https://github.com/SaladTechnologies/salad-recipes/issues/new?title=TEI%20BGE-M3%20recipe&body=Image%3A%20${props.container.image}%0AModel%3A%20${props.container.environmentVariables.MODEL_ID}`}>Report an Issue on GitHub</Link>\n",
+    "readinessProbe": {
+      "failureThreshold": 3,
+      "http": {
+        "headers": [],
+        "path": "/health",
+        "port": 3000,
+        "scheme": "http"
+      },
+      "initialDelaySeconds": 0,
+      "periodSeconds": 5,
+      "successThreshold": 1,
+      "timeoutSeconds": 10
+    }
+  },
+  "form": {
+    "title": "🤗 TEI BGE-M3 Embeddings",
+    "description": "Run `BAAI/bge-m3` with Hugging Face Text Embeddings Inference (TEI) on a Salad GPU.\n\nBGE-M3 is a multilingual embedding model built for retrieval workloads. It is useful for RAG, semantic search, document retrieval, and similarity search when you need one model that can handle short queries, longer documents, and multilingual content.\n\nThis recipe uses:\n\n- **Server**: Hugging Face Text Embeddings Inference\n- **Model ID**: `BAAI/bge-m3`\n- **Docker image**: `ghcr.io/huggingface/text-embeddings-inference:89-1.9`\n- **Command equivalent**: `text-embeddings-router --model-id BAAI/bge-m3 --port 3000`\n- **Container port**: `3000`\n\nWhy deploy this model:\n\n- BGE-M3 supports more than 100 languages.\n- It supports long inputs up to 8192 tokens, which is useful for document retrieval.\n- It produces 1024-dimensional dense embeddings for vector databases and similarity search.\n- The underlying BGE-M3 model family also supports dense, sparse, and ColBERT-style retrieval modes. This TEI recipe is focused on the dense embedding endpoint that most RAG and vector search stacks expect.\n\nDeployment notes:\n\n- Startup downloads the model from Hugging Face, so the first replica can take several minutes to become ready.\n- The recipe uses the Ada Lovelace TEI image for RTX 4000-series GPUs and the repo's standard RTX 4090 GPU class default.\n- The default `MAX_BATCH_TOKENS` is `16384`. BGE-M3 can accept long inputs, so lower this value if you hit memory pressure or raise it only after load testing.\n- If you disable Container Gateway Authentication, anyone with the deployment URL can call the embedding endpoint.\n\nHelpful references:\n\n- [Hugging Face Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)\n- [BAAI/bge-m3 model card](https://huggingface.co/BAAI/bge-m3)\n- [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding)\n",
+    "type": "object",
+    "required": ["container_group_name", "networking_auth"],
+    "properties": {
+      "container_group_name": {
+        "title": "Container Group Name",
+        "description": "Required* Must be 2-63 lowercase letters, numbers, or hyphens. Cannot start with a number or start or end with a hyphen.",
+        "type": "string",
+        "maxLength": 63,
+        "minLength": 2,
+        "pattern": "^[a-z][a-z0-9-]{0,61}[a-z0-9]$"
+      },
+      "networking_auth": {
+        "title": "Require Container Gateway Authentication",
+        "description": "When enabled, requests must include a SaladCloud API Key. When disabled, any anonymous request will be allowed.",
+        "type": "boolean",
+        "default": true
+      }
+    }
+  },
+  "patches": [
+    [
+      {
+        "op": "copy",
+        "from": "/input/autostart_policy",
+        "path": "/output/autostartPolicy"
+      },
+      {
+        "op": "copy",
+        "from": "/input/replicas",
+        "path": "/output/replicas"
+      },
+      {
+        "op": "copy",
+        "from": "/input/container_group_name",
+        "path": "/output/name"
+      },
+      {
+        "op": "copy",
+        "from": "/input/networking_auth",
+        "path": "/output/networking/auth"
+      }
+    ]
+  ],
+  "ui": {},
+  "documentation_url": "https://docs.salad.com/container-engine/reference/recipes/tei-bge-m3",
+  "short_description": "Serve BAAI/bge-m3 embeddings with Hugging Face Text Embeddings Inference for RAG, semantic search, document retrieval, and similarity search.",
+  "workload_types": ["LLM"]
+}

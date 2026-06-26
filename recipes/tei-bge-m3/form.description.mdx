@@ -1,0 +1,31 @@
+Run `BAAI/bge-m3` with Hugging Face Text Embeddings Inference (TEI) on a Salad GPU.
+
+BGE-M3 is a multilingual embedding model built for retrieval workloads. It is useful for RAG, semantic search, document retrieval, and similarity search when you need one model that can handle short queries, longer documents, and multilingual content.
+
+This recipe uses:
+
+- **Server**: Hugging Face Text Embeddings Inference
+- **Model ID**: `BAAI/bge-m3`
+- **Docker image**: `ghcr.io/huggingface/text-embeddings-inference:89-1.9`
+- **Command equivalent**: `text-embeddings-router --model-id BAAI/bge-m3 --port 3000`
+- **Container port**: `3000`
+
+Why deploy this model:
+
+- BGE-M3 supports more than 100 languages.
+- It supports long inputs up to 8192 tokens, which is useful for document retrieval.
+- It produces 1024-dimensional dense embeddings for vector databases and similarity search.
+- The underlying BGE-M3 model family also supports dense, sparse, and ColBERT-style retrieval modes. This TEI recipe is focused on the dense embedding endpoint that most RAG and vector search stacks expect.
+
+Deployment notes:
+
+- Startup downloads the model from Hugging Face, so the first replica can take several minutes to become ready.
+- The recipe uses the Ada Lovelace TEI image for RTX 4000-series GPUs and the repo's standard RTX 4090 GPU class default.
+- The default `MAX_BATCH_TOKENS` is `16384`. BGE-M3 can accept long inputs, so lower this value if you hit memory pressure or raise it only after load testing.
+- If you disable Container Gateway Authentication, anyone with the deployment URL can call the embedding endpoint.
+
+Helpful references:
+
+- [Hugging Face Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)
+- [BAAI/bge-m3 model card](https://huggingface.co/BAAI/bge-m3)
+- [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding)

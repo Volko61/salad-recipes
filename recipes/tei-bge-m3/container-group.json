@@ -1,0 +1,50 @@
+{
+  "autostartPolicy": true,
+  "container": {
+    "environmentVariables": {
+      "HOSTNAME": "::",
+      "PORT": "3000",
+      "MODEL_ID": "BAAI/bge-m3",
+      "DTYPE": "float16",
+      "MAX_BATCH_TOKENS": "16384",
+      "MAX_CLIENT_BATCH_SIZE": "32"
+    },
+    "image": "ghcr.io/huggingface/text-embeddings-inference:89-1.9",
+    "imageCaching": true,
+    "priority": "high",
+    "resources": {
+      "cpu": 4,
+      "gpuClasses": [
+        "ed563892-aacd-40f5-80b7-90c9be6c759b"
+      ],
+      "memory": 30720,
+      "storageAmount": 53687091200
+    }
+  },
+  "name": "",
+  "networking": {
+    "auth": true,
+    "clientRequestTimeout": 100000,
+    "loadBalancer": "least_number_of_connections",
+    "port": 3000,
+    "protocol": "http",
+    "serverResponseTimeout": 100000,
+    "singleConnectionLimit": false
+  },
+  "replicas": 1,
+  "restartPolicy": "always",
+  "readme": "$replace",
+  "readinessProbe": {
+    "failureThreshold": 3,
+    "http": {
+      "headers": [],
+      "path": "/health",
+      "port": 3000,
+      "scheme": "http"
+    },
+    "initialDelaySeconds": 0,
+    "periodSeconds": 5,
+    "successThreshold": 1,
+    "timeoutSeconds": 10
+  }
+}
