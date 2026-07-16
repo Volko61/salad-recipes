@@ -30,12 +30,12 @@
     {
       "op": "test",
       "path": "/input/sogni_worker_type",
-      "value": "flux"
+      "value": "comfy"
     },
     {
       "op": "add",
       "path": "/output/container/image",
-      "value": "sogni/sogni-flux-worker:latest"
+      "value": "sogni/comfy-worker:latest"
     }
   ],
   [

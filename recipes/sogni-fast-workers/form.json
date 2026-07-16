@@ -2,12 +2,7 @@
   "title": "Sogni Fast Worker",
   "description": "$replace",
   "type": "object",
-  "required": [
-    "container_group_name",
-    "sogni_worker_type",
-    "sogni_api_key",
-    "sogni_nft_token_id"
-  ],
+  "required": ["container_group_name", "sogni_worker_type", "sogni_api_key", "sogni_nft_token_id"],
   "properties": {
     "container_group_name": {
       "title": "Container Group Name",
@@ -20,11 +15,8 @@
     "sogni_worker_type": {
       "title": "Sogni Worker Type",
       "type": "string",
-      "enum": [
-        "flux",
-        "stable_diffusion"
-      ],
-      "default": "flux"
+      "enum": ["comfy", "stable_diffusion"],
+      "default": "comfy"
     },
     "sogni_api_key": {
       "title": "Sogni API Key",
@@ -45,14 +37,10 @@
     "sogni_worker_type": {
       "oneOf": [
         {
-          "required": [
-            "download_model_count"
-          ],
+          "required": ["download_model_count"],
           "properties": {
             "sogni_worker_type": {
-              "enum": [
-                "stable_diffusion"
-              ]
+              "enum": ["stable_diffusion"]
             },
             "download_model_count": {
               "title": "Models to Download at Start",
