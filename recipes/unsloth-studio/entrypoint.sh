@@ -23,10 +23,29 @@ UNS="/root/.unsloth/studio/unsloth_studio/bin/unsloth"
 # 1er demarrage ; ensuite l'utilisateur peut le changer dans l'UI.
 export UNSLOTH_STUDIO_PASSWORD="${PASS}"
 
-# Moteur GGUF (llama.cpp) : le binaire llama-server n'a pas de rpath vers ses
-# propres libs (libllama-server-impl.so, libggml*.so...) -> "llama-server failed
-# to start". On ajoute son dossier de libs a LD_LIBRARY_PATH pour qu'il demarre.
-export LD_LIBRARY_PATH="/root/.unsloth/llama.cpp/build/bin:${LD_LIBRARY_PATH:-}"
+# Moteur GGUF (llama.cpp) sur GPU :
+#  - llama-server n'a pas de rpath vers ses propres libs (libllama-server-impl.so,
+#    libggml*.so) -> il faut son dossier de libs sur le path.
+#  - la build CUDA (libggml-cuda.so) a besoin des libs runtime CUDA de torch
+#    (libcudart, libcublas, libnvrtc) -> on ajoute aussi ces dossiers.
+_NVLIB="/root/.unsloth/studio/unsloth_studio/lib/python3.13/site-packages/nvidia"
+export LD_LIBRARY_PATH="/root/.unsloth/llama.cpp/build/bin:${_NVLIB}/cuda_runtime/lib:${_NVLIB}/cublas/lib:${_NVLIB}/cuda_nvrtc/lib:${LD_LIBRARY_PATH:-}"
+
+# GGUF accelere GPU : l'image embarque un llama.cpp CPU (build sans GPU au CI).
+# Au 1er boot (le GPU reel est present -> resolution correcte, download GitHub OK
+# depuis Salad), on installe la build CUDA prebuilt d'Unsloth. Idempotent (skip
+# si deja a jour). En tache de fond pour ne pas retarder Studio ; le build CPU
+# sert en attendant, puis un swap atomique bascule sur la build GPU.
+_STUDIO_PY="/root/.unsloth/studio/unsloth_studio/bin/python"
+_LC_INSTALLER="/root/.unsloth/studio/unsloth_studio/lib/python3.13/site-packages/studio/install_llama_prebuilt.py"
+if [ -x "${_STUDIO_PY}" ] && [ -f "${_LC_INSTALLER}" ]; then
+  echo "[entrypoint] Installation llama.cpp CUDA (GGUF GPU) en tache de fond..."
+  (
+    "${_STUDIO_PY}" "${_LC_INSTALLER}" --install-dir /root/.unsloth/llama.cpp \
+      && echo "[entrypoint] llama.cpp CUDA pret (GGUF accelere GPU)." \
+      || echo "[entrypoint] install llama.cpp CUDA echouee -> GGUF reste en CPU."
+  ) > /root/llama_cuda_install.log 2>&1 &
+fi
 
 # Login HF optionnel (permet de sauvegarder tes LoRA hors de la box)
 if [ -n "${HF_TOKEN:-}" ]; then
