@@ -23,6 +23,11 @@ UNS="/root/.unsloth/studio/unsloth_studio/bin/unsloth"
 # 1er demarrage ; ensuite l'utilisateur peut le changer dans l'UI.
 export UNSLOTH_STUDIO_PASSWORD="${PASS}"
 
+# Moteur GGUF (llama.cpp) : le binaire llama-server n'a pas de rpath vers ses
+# propres libs (libllama-server-impl.so, libggml*.so...) -> "llama-server failed
+# to start". On ajoute son dossier de libs a LD_LIBRARY_PATH pour qu'il demarre.
+export LD_LIBRARY_PATH="/root/.unsloth/llama.cpp/build/bin:${LD_LIBRARY_PATH:-}"
+
 # Login HF optionnel (permet de sauvegarder tes LoRA hors de la box)
 if [ -n "${HF_TOKEN:-}" ]; then
   echo "[entrypoint] Login Hugging Face..."

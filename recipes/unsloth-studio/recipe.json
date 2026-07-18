@@ -6,7 +6,8 @@
       "command": [],
       "environmentVariables": {
         "EXPOSE_MODE": "gateway",
-        "STUDIO_PORT": "8080"
+        "STUDIO_PORT": "8080",
+        "LD_LIBRARY_PATH": "/root/.unsloth/llama.cpp/build/bin"
       },
       "image": "volkobfq/unsloth-studio@sha256:23d88a29daf2e6acb05aa6872c1a71996ffe9a24b761624b507418f514de7750",
       "imageCaching": false,
