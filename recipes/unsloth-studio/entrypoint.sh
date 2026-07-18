@@ -32,18 +32,36 @@ _NVLIB="/root/.unsloth/studio/unsloth_studio/lib/python3.13/site-packages/nvidia
 export LD_LIBRARY_PATH="/root/.unsloth/llama.cpp/build/bin:${_NVLIB}/cuda_runtime/lib:${_NVLIB}/cublas/lib:${_NVLIB}/cuda_nvrtc/lib:${LD_LIBRARY_PATH:-}"
 
 # GGUF accelere GPU : l'image embarque un llama.cpp CPU (build sans GPU au CI).
-# Au 1er boot (le GPU reel est present -> resolution correcte, download GitHub OK
-# depuis Salad), on installe la build CUDA prebuilt d'Unsloth. Idempotent (skip
-# si deja a jour). En tache de fond pour ne pas retarder Studio ; le build CPU
-# sert en attendant, puis un swap atomique bascule sur la build GPU.
+# Au 1er boot (GPU reel present -> resolution correcte, download GitHub OK depuis
+# Salad) on installe la build CUDA prebuilt d'Unsloth.
+# IMPORTANT : l'installeur, lance sur un dossier existant, le SUPPRIME parfois
+# sans reinstaller (1er passage) -> on installe dans un dossier TEMPORAIRE, et on
+# ne remplace le llama.cpp CPU (qui sert le GGUF en attendant) que si la build
+# CUDA est validee (swap atomique). Aucune fenetre "runtime not installed".
 _STUDIO_PY="/root/.unsloth/studio/unsloth_studio/bin/python"
 _LC_INSTALLER="/root/.unsloth/studio/unsloth_studio/lib/python3.13/site-packages/studio/install_llama_prebuilt.py"
+_LC_DIR="/root/.unsloth/llama.cpp"
+_LC_TMP="/root/.unsloth/llama.cpp.cuda"
 if [ -x "${_STUDIO_PY}" ] && [ -f "${_LC_INSTALLER}" ]; then
   echo "[entrypoint] Installation llama.cpp CUDA (GGUF GPU) en tache de fond..."
   (
-    "${_STUDIO_PY}" "${_LC_INSTALLER}" --install-dir /root/.unsloth/llama.cpp \
-      && echo "[entrypoint] llama.cpp CUDA pret (GGUF accelere GPU)." \
-      || echo "[entrypoint] install llama.cpp CUDA echouee -> GGUF reste en CPU."
+    ok=0
+    for attempt in 1 2 3; do
+      rm -rf "${_LC_TMP}"
+      if "${_STUDIO_PY}" "${_LC_INSTALLER}" --install-dir "${_LC_TMP}" \
+           && [ -f "${_LC_TMP}/build/bin/libggml-cuda.so" ]; then
+        ok=1; break
+      fi
+      echo "[entrypoint] tentative ${attempt} echouee, retry..."; sleep 5
+    done
+    if [ "${ok}" = "1" ]; then
+      rm -rf "${_LC_DIR}" && mv "${_LC_TMP}" "${_LC_DIR}"
+      ldconfig 2>/dev/null || true
+      echo "[entrypoint] llama.cpp CUDA pret (GGUF accelere GPU)."
+    else
+      rm -rf "${_LC_TMP}"
+      echo "[entrypoint] install llama.cpp CUDA echouee -> GGUF reste en CPU."
+    fi
   ) > /root/llama_cuda_install.log 2>&1 &
 fi
 
