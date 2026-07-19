@@ -25,16 +25,5 @@
       "from": "/input/container_environment_hf_token",
       "path": "/output/container/environmentVariables/HF_TOKEN"
     }
-  ],
-  [
-    {
-      "op": "test",
-      "path": "/input/container_environment_hf_token",
-      "value": ""
-    },
-    {
-      "op": "remove",
-      "path": "/output/container/environmentVariables/HF_TOKEN"
-    }
   ]
 ]
